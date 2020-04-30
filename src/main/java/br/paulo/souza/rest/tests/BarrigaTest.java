@@ -22,6 +22,7 @@ public class BarrigaTest extends BaseTest {
 	
 	private static String CONTA_NAME = "Conta " + System.nanoTime();
 	private static Integer CONTA_ID;
+	private static Integer MOV_ID;
 	
 	@Before
 	public void login() {
@@ -93,16 +94,17 @@ public class BarrigaTest extends BaseTest {
 	
 	@Test
 	public void t05_deveInserirMovimentacaoSucesso() {		
-		Movimentacao mov;
-		mov = getMovimentacaoValida();
+		Movimentacao mov = getMovimentacaoValida();
 		
-		given()
+		MOV_ID = given()
 			.header("Authorization", "JWT " + TOKEN)
 			.body(mov) // -> será convertido em JSON
 		.when()
 			.post("/transacoes")
 		.then()
+			.log().all()
 			.statusCode(201)
+			.extract().path("id")
 		;
 	}
 	
@@ -165,11 +167,12 @@ public class BarrigaTest extends BaseTest {
 	public void t09_deveRetornarSaldoConta() {		
 		given()
 			.header("Authorization", "JWT " + TOKEN)
+			//.pathParam("conta_id", CONTA_ID)
 		.when()
 			.get("/saldo")
 		.then()
 			.statusCode(200)
-			.body("find{it.conta_id == 114725}.saldo", is("643.00"))
+			.body("find{it.conta_id == "+CONTA_ID+"}.saldo", is("643.00"))
 		;
 	}
 	
@@ -177,8 +180,9 @@ public class BarrigaTest extends BaseTest {
 	public void t10_deveRemoverMovimetacao() {		
 		given()
 			.header("Authorization", "JWT " + TOKEN)
+			.pathParam("id", MOV_ID)
 		.when()
-			.delete("/transacoes/97273")
+			.delete("/transacoes/{id}")
 		.then()
 			.statusCode(204)
 		;
